@@ -1,0 +1,22 @@
+<hazelcast-client xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                  xsi:schemaLocation="http://www.hazelcast.com/schema/client-config
+                               http://www.hazelcast.com/schema/client-config/hazelcast-client-config-3.8.xsd"
+                  xmlns="http://www.hazelcast.com/schema/client-config">
+
+    <properties>
+        <property name="hazelcast.discovery.enabled">true</property>
+    </properties>
+
+    <network>
+        <discovery-strategies>
+            <discovery-strategy enabled="true"
+                                class="com.hazelcast.kubernetes.HazelcastKubernetesDiscoveryStrategy">
+
+                <properties>
+                    <property name="service-name">hazelcast</property>
+                    <property name="namespace">default</property>
+                </properties>
+            </discovery-strategy>
+        </discovery-strategies>
+    </network>
+</hazelcast-client>

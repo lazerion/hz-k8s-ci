@@ -17,27 +17,15 @@ pipeline {
         stage('Check k8s') {
             steps {
                 sh "kubectl version"
-                sh "kubectl get services"
             }
         }
 
         stage('Build') {
             steps {
-                git branch: 'kubernetes-support', changelog: false, poll: false, url: 'https://github.com/hazelcast/hazelcast-docker.git'
+                git branch: 'kubernetes-support', changelog: false, poll: false, url: 'https://github.com/googlielmo/hazelcast-docker.git'
                 dir('hazelcast-kubernetes') {
                     script {
                         oss = docker.build("${params.NAME}:${params.VERSION}")
-                    }
-                }
-            }
-        }
-
-        stage('Run') {
-            steps {
-                script {
-                    oss.withRun("-p 5701:5701") { container ->
-                        sleep params.SLEEP as Integer
-                        sh "docker logs ${container.id} --tail 1 2>&1 | grep STARTED"
                     }
                 }
             }
@@ -61,9 +49,13 @@ pipeline {
     post {
         always {
             cleanWs deleteDirs: true
-            script {
-                sh "docker rmi ${oss.id}"
+            retry(3){
+                script {
+                    sleep 5
+                    sh "docker rmi ${oss.id}"
+                }
             }
+
         }
         failure {
             mail to: 'baris@hazelcast.com',
