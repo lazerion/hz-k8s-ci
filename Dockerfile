@@ -8,9 +8,6 @@ RUN  \
   apt-get -y upgrade && \
   apt-get install -y vim wget curl git maven
 
-# attach volumes
-VOLUME /volume/git
-
 # create working directory
 RUN mkdir -p /local/git
 WORKDIR /local/git
