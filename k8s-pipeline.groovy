@@ -7,6 +7,8 @@ pipeline {
         string(name: 'NAME', defaultValue: 'hz-k8s', description: 'Image name')
         string(name: 'VERSION', defaultValue: '3.9', description: 'Image version')
         string(name: 'SLEEP', defaultValue: '10', description: 'Wait time for Hazelcast STARTED')
+        string(name: 'CLIENT', defaultValue: 'client', description: 'client image for acceptance')
+        string(name: 'CLIENT_VERSION', defaultValue: '1', description: 'client image version')
     }
 
     options {
@@ -28,6 +30,12 @@ pipeline {
                         oss = docker.build("${params.NAME}:${params.VERSION}")
                     }
                 }
+
+                git changelog: false, poll: false, url: 'https://github.com/lazerion/hz-k8s-ci.git'
+                script{
+                    client = docker.build("${params.CLIENT}:${params.CLIENT_VERSION}")
+                }
+
             }
         }
 
@@ -41,13 +49,23 @@ pipeline {
                 sleep 10
                 sh "kubectl get deployments"
                 sh "kubectl get pods --show-labels"
-                sh "kubectl delete -f deployment.yaml"
+            }
+        }
+
+        stage('Acceptance'){
+            steps{
+                sh "kubectl run -i --image=${params.CLIENT}:${params.CLIENT_VERSION} client-app --port=5701"
             }
         }
     }
 
     post {
         always {
+            sh "kubectl delete deployment client-app"
+            sh "kubectl delete -f deployment.yaml"
+            sh "kubectl delete -f config.yaml"
+            sh "kubectl delete -f fabric8.yaml"
+
             cleanWs deleteDirs: true
             retry(3){
                 script {
@@ -55,7 +73,12 @@ pipeline {
                     sh "docker rmi ${oss.id}"
                 }
             }
-
+            retry(3){
+                script {
+                    sleep 5
+                    sh "docker rmi ${client.id}"
+                }
+            }
         }
         failure {
             mail to: 'baris@hazelcast.com',
