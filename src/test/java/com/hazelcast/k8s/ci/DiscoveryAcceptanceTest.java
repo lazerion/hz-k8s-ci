@@ -12,7 +12,9 @@ import org.junit.Test;
 import java.io.IOException;
 import java.io.InputStream;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 public class DiscoveryAcceptanceTest {
 
@@ -36,7 +38,6 @@ public class DiscoveryAcceptanceTest {
         final String value = RandomStringUtils.randomAlphanumeric(42);
         IMap<String, String> map = client.getMap("data");
         map.put(key, value);
-        assertNotEquals(map.get(key), value);
+        assertEquals(map.get(key), value);
     }
-
 }
