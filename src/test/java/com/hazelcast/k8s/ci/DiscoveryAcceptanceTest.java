@@ -13,6 +13,8 @@ import java.io.IOException;
 import java.io.InputStream;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 public class DiscoveryAcceptanceTest {
 
@@ -23,6 +25,10 @@ public class DiscoveryAcceptanceTest {
         ClassLoader classLoader = getClass().getClassLoader();
         InputStream stream = classLoader.getResource("hazelcast-client.xml").openStream();
         ClientConfig cfg = new XmlClientConfigBuilder(stream).build();
+
+        assertTrue(cfg.getNetworkConfig().getDiscoveryConfig().isEnabled());
+        assertFalse(cfg.getNetworkConfig().getDiscoveryConfig().getDiscoveryStrategyConfigs().isEmpty());
+
         client = HazelcastClient.newHazelcastClient(cfg);
     }
 
