@@ -54,31 +54,30 @@ pipeline {
 
         stage('Acceptance'){
             steps{
-                sh "kubectl run -i --image=${params.CLIENT}:${params.CLIENT_VERSION} client-app --port=5701"
+                sh "kubectl run -i --image=${params.CLIENT}:${params.CLIENT_VERSION} client-app --port=5701 --quiet=true --restart=Never --rm=true --namespace=default"
             }
         }
     }
 
     post {
         always {
-            sh "kubectl delete deployment client-app"
             sh "kubectl delete -f deployment.yaml"
             sh "kubectl delete -f config.yaml"
             sh "kubectl delete -f fabric8.yaml"
 
             cleanWs deleteDirs: true
-            retry(3){
-                script {
-                    sleep 5
-                    sh "docker rmi ${oss.id}"
-                }
-            }
-            retry(3){
-                script {
-                    sleep 5
-                    sh "docker rmi ${client.id}"
-                }
-            }
+//            retry(3){
+//                script {
+//                    sleep 5
+//                    sh "docker rmi ${oss.id}"
+//                }
+//            }
+//            retry(3){
+//                script {
+//                    sleep 5
+//                    sh "docker rmi ${client.id}"
+//                }
+//            }
         }
         failure {
             mail to: 'baris@hazelcast.com',

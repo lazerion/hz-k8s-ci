@@ -33,11 +33,17 @@ public class DiscoveryAcceptanceTest {
     }
 
     @Test
-    public void shouldDiscoverMember() {
+    public void shouldPutGetWhenClusterReady() {
         final String key = RandomStringUtils.randomAlphanumeric(42);
         final String value = RandomStringUtils.randomAlphanumeric(42);
         IMap<String, String> map = client.getMap("data");
         map.put(key, value);
         assertEquals(map.get(key), value);
+    }
+
+    @Test
+    public void shouldDiscoverAtLeastOneMember() {
+        int clusterSize = client.getCluster().getMembers().size();
+        assertTrue(clusterSize >= 1);
     }
 }
