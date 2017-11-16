@@ -20,6 +20,7 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.io.InputStream;
 
+import static com.hazelcast.test.HazelcastTestSupport.assertClusterSizeEventually;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -94,15 +95,9 @@ public class DiscoveryAcceptanceTest {
 
         logger.info("current replica count : {}", controller.getStatus().getReplicas());
 
-        int count = 0;
-        int clusterSize = 0;
-        while (count < 4){
-            ++count;
-            clusterSize = client.getCluster().getMembers().size();
-            logger.info("Hazelcast client replica count {}", clusterSize);
-            if (clusterSize == expected) break;
-            Thread.sleep(5000);
-        }
-        assertTrue(clusterSize == expected);
+        assertClusterSizeEventually(expected, client);
+        k8s.replicationControllers()
+                .inNamespace("default")
+                .withName("hazelcast").scale(replicas, true);
     }
 }
