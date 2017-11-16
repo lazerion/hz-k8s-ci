@@ -88,19 +88,13 @@ public class DiscoveryAcceptanceTest {
         final int replicas = controller.getStatus().getReplicas();
         final int expected = replicas + 1;
 
-        controller = k8s.replicationControllers().inNamespace("default").withName("hazelcast").scale(expected);
+        controller = k8s.replicationControllers()
+                .inNamespace("default")
+                .withName("hazelcast").scale(expected, true);
+
+        logger.info("current replica count : {}", controller.getStatus().getReplicas());
 
         int count = 0;
-        while (count < 4){
-            ++count;
-            logger.info("current replica count : {}", controller.getStatus().getReplicas());
-            if (controller.getStatus().getReplicas() == expected){
-                break;
-            }
-            Thread.sleep(1000);
-        }
-
-        count = 0;
         int clusterSize = 0;
         while (count < 4){
             ++count;
