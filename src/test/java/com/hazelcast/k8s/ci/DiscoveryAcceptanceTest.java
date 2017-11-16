@@ -11,6 +11,7 @@ import io.fabric8.kubernetes.client.ConfigBuilder;
 import io.fabric8.kubernetes.client.DefaultKubernetesClient;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import org.apache.commons.lang3.RandomStringUtils;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.slf4j.Logger;
@@ -34,6 +35,12 @@ public class DiscoveryAcceptanceTest {
     public void before() throws IOException {
         initializeKubernetes();
         initializeHazelcast();
+    }
+
+    @After
+    public void after(){
+        client.shutdown();
+        k8s.close();
     }
 
     private void initializeKubernetes() {
@@ -90,10 +97,18 @@ public class DiscoveryAcceptanceTest {
             if (controller.getStatus().getReplicas() == expected){
                 break;
             }
+            Thread.sleep(1000);
         }
 
-        Thread.sleep(5000);
-        int clusterSize = client.getCluster().getMembers().size();
+        count = 0;
+        int clusterSize = 0;
+        while (count < 4){
+            ++count;
+            clusterSize = client.getCluster().getMembers().size();
+            logger.info("Hazelcast client replica count {}", clusterSize);
+            if (clusterSize == expected) break;
+            Thread.sleep(5000);
+        }
         assertTrue(clusterSize == expected);
     }
 }
