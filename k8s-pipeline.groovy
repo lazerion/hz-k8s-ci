@@ -24,7 +24,7 @@ pipeline {
 
         stage('Build') {
             steps {
-                git branch: 'kubernetes-support', changelog: false, poll: false, url: 'https://github.com/googlielmo/hazelcast-docker.git'
+                git branch: 'master', changelog: false, poll: false, url: 'https://github.com/hazelcast/hazelcast-docker.git'
                 dir('hazelcast-kubernetes') {
                     script {
                         oss = docker.build("${params.NAME}:${params.VERSION}")
@@ -42,13 +42,10 @@ pipeline {
         stage('Deploy') {
             steps {
                 git changelog: false, poll: false, url: 'https://github.com/lazerion/hz-k8s-ci.git'
+
                 sh "kubectl apply -f config.yaml"
                 sh "kubectl apply -f fabric8.yaml"
                 sh "kubectl create -f deployment.yaml"
-                // TODO find a proper way to wait
-                sleep 10
-                sh "kubectl get deployments"
-                sh "kubectl get pods --show-labels"
             }
         }
 
@@ -61,23 +58,23 @@ pipeline {
 
     post {
         always {
-            sh "kubectl delete -f deployment.yaml"
-            sh "kubectl delete -f config.yaml"
-            sh "kubectl delete -f fabric8.yaml"
+            sh "kubectl delete -f deployment.yaml || true"
+            sh "kubectl delete -f config.yaml || true"
+            sh "kubectl delete -f fabric8.yaml || true"
 
             cleanWs deleteDirs: true
-//            retry(3){
-//                script {
-//                    sleep 5
-//                    sh "docker rmi ${oss.id}"
-//                }
-//            }
-//            retry(3){
-//                script {
-//                    sleep 5
-//                    sh "docker rmi ${client.id}"
-//                }
-//            }
+            retry(3){
+                script {
+                    sleep 5
+                    sh "docker rmi ${oss.id}"
+                }
+            }
+            retry(3){
+                script {
+                    sleep 5
+                    sh "docker rmi ${client.id}"
+                }
+            }
         }
         failure {
             mail to: 'baris@hazelcast.com',

@@ -100,4 +100,28 @@ public class DiscoveryAcceptanceTest {
                 .inNamespace("default")
                 .withName("hazelcast").scale(replicas, true);
     }
+
+    @Test
+    public void shouldFindMembersWhenScaleDown() throws InterruptedException {
+        ReplicationController controller = k8s.replicationControllers()
+                .inNamespace("default")
+                .withName("hazelcast")
+                .get();
+
+        logger.info("current replica count : {}", controller.getStatus().getReplicas());
+        final int replicas = controller.getStatus().getReplicas();
+        assertTrue(replicas >= 2);
+        final int expected = replicas - 1;
+
+        controller = k8s.replicationControllers()
+                .inNamespace("default")
+                .withName("hazelcast").scale(expected, true);
+
+        logger.info("current replica count : {}", controller.getStatus().getReplicas());
+
+        assertClusterSizeEventually(expected, client);
+        k8s.replicationControllers()
+                .inNamespace("default")
+                .withName("hazelcast").scale(replicas, true);
+    }
 }
