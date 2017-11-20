@@ -6,9 +6,12 @@ pipeline {
     parameters {
         string(name: 'NAME', defaultValue: 'hz-k8s', description: 'Image name')
         string(name: 'VERSION', defaultValue: '3.9', description: 'Image version')
-        string(name: 'SLEEP', defaultValue: '10', description: 'Wait time for Hazelcast STARTED')
         string(name: 'CLIENT', defaultValue: 'client', description: 'client image for acceptance')
         string(name: 'CLIENT_VERSION', defaultValue: '1', description: 'client image version')
+
+        string(name: 'BRANCH_NAME', defaultValue: 'master', description: 'k8s base docker repository branch')
+        string(name: 'GIT_REPO', defaultValue: 'https://github.com/hazelcast/hazelcast-docker.git', description: 'k8s base docker repository')
+        string(name: 'DIRECTORY', defaultValue: 'hazelcast-kubernetes', description: 'docker file directory')
     }
 
     options {
@@ -24,8 +27,8 @@ pipeline {
 
         stage('Build') {
             steps {
-                git branch: 'master', changelog: false, poll: false, url: 'https://github.com/hazelcast/hazelcast-docker.git'
-                dir('hazelcast-kubernetes') {
+                git branch: "${params.BRANCH_NAME}", changelog: false, poll: false, url: "${params.GIT_REPO}"
+                dir("${params.DIRECTORY}") {
                     script {
                         oss = docker.build("${params.NAME}:${params.VERSION}")
                     }
